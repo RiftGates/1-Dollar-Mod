@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": {
+      "item": "mod1:chicken"
+    }
+  },
+  "pattern": [
+    "   ",
+    "R R",
+    "R R"
+  ],
+  "result": {
+    "item": "mod1:chicken_boots"
+  },
+  "show_notification": true
+}

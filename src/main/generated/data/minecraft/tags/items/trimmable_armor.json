@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "mod1:chicken_boots",
+    "mod1:chicken_chestplate",
+    "mod1:chicken_leggings",
+    "mod1:chicken_helmet"
+  ]
+}
