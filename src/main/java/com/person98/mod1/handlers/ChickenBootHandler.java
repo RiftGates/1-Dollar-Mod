@@ -1,10 +1,12 @@
 package com.person98.mod1.handlers;
 
 import com.person98.mod1.item.ModItems;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.*;
+import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -16,9 +18,10 @@ import java.util.UUID;
 
 public class ChickenBootHandler {
 
-    private static final int COOLDOWN_TICKS = 5; // Adjust as needed
+    private static final int COOLDOWN_TICKS = 5;
     private static Map<UUID, Integer> playerCooldowns = new HashMap<>();
-    private static Map<UUID, Boolean> playerSneakingStates = new HashMap<>(); // To track if a player is sneaking
+    private static Map<UUID, Boolean> playerSneakingStates = new HashMap<>();
+    private static Map<UUID, ChickenEntity> fallingChickens = new HashMap<>();
 
     public static void register() {
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -27,25 +30,35 @@ public class ChickenBootHandler {
                     UUID playerUUID = player.getUuid();
                     boolean isSneaking = player.isSneaking();
                     boolean wasSneaking = playerSneakingStates.getOrDefault(playerUUID, false);
+                    ChickenEntity chicken = fallingChickens.get(playerUUID);
+
+                    if (chicken != null && chicken.isOnGround()) {
+                        player.stopRiding();
+                        chicken.remove(Entity.RemovalReason.DISCARDED);
+                        fallingChickens.remove(playerUUID);
+                        world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 20, 0.5, 0.5, 0.5, 0.5);
+                        player.fallDistance = 0; // Prevent fall damage
+                    } else if (!player.isOnGround() && !fallingChickens.containsKey(playerUUID) && player.getVelocity().y < -0.5) {
+                        chicken = new ChickenEntity(EntityType.CHICKEN, world);
+                        chicken.updatePosition(player.getX(), player.getY() - 1, player.getZ());
+                        world.spawnEntity(chicken);
+                        player.startRiding(chicken, true);
+                        fallingChickens.put(playerUUID, chicken);
+                    }
 
                     if (player.getVelocity().lengthSquared() > 0.0001) {
                         if (player.getEquippedStack(EquipmentSlot.FEET).getItem() == ModItems.CHICKEN_BOOTS) {
-
-                            // If the player isn't on cooldown, play the sound
                             if (!playerCooldowns.containsKey(playerUUID) || playerCooldowns.get(playerUUID) <= 0) {
                                 playChickenCluckSound(world, player.getX(), player.getY(), player.getZ());
                                 playerCooldowns.put(playerUUID, COOLDOWN_TICKS);
                             } else {
-                                // Otherwise, decrement the cooldown
                                 playerCooldowns.put(playerUUID, playerCooldowns.get(playerUUID) - 1);
                             }
 
-                            // If the player starts sneaking (but wasn't sneaking last tick)
                             if (isSneaking && !wasSneaking) {
                                 dropEgg(world, player.getX(), player.getY(), player.getZ());
                             }
 
-                            // Update sneaking state for the player
                             playerSneakingStates.put(playerUUID, isSneaking);
                         }
                     }
