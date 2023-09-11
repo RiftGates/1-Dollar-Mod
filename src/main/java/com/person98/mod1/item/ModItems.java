@@ -18,10 +18,7 @@ public class ModItems {
             new ArmorItem(ModArmorMaterials.RUBY, ArmorItem.Type.BOOTS, new FabricItemSettings()));
     private static void addItemsToIngredientItemGroup(FabricItemGroupEntries entries) {
         entries.add(CHICKEN);
-//        entries.add(CHICKEN_BOOTS);
-//        entries.add(CHICKEN_CHESTPLATE);
-//        entries.add(CHICKEN_HELMET);
-//        entries.add(CHICKEN_LEGGINGS);
+
     }
 
     private static Item registerItem(String name, Item item) {
